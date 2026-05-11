@@ -1,9 +1,71 @@
-The order book stores orders grouped by price level.
+# Design Notes
 
-Each price level is represented by a Limit object.
+## Project Goal
 
-Each Limit stores orders in FIFO. 
+This is a c++ limit order book and matching engine. Current version focus is on correctness, then later I will move towards optimizations.
 
-The OrderBook has two sides:
-- asks 
-- bids
+---
+
+## Current Features
+
+- Resting limit orders
+- Buy and sell sides
+- Price levels
+- FIFO ordering within each price level
+- Fast lookup by order id
+- Order cancellation
+- Best bid / best ask lookup
+- Incoming matching order
+- Partial fills
+- Multi-order FIFO fills
+- Leftover quantity resting in the book
+- Trade record generation
+- Duplicate order ID rejection
+
+---
+
+## Core Objects
+
+### 'Order'
+
+Represents one order
+
+Fields:
+
+- id
+- side -> BUY | SELL
+- price
+- qty
+- timestamp
+
+### 'Limit'
+
+Represents one price level.
+
+Fields:
+
+- price
+- num_orders
+- total_volume
+- resting_orders (std::list)
+
+---
+
+### 'Trade'
+
+Represents one execution between an incoming order and a resting order.
+
+Fields:
+
+- buy_order_id
+- sell_order_id
+- price
+- qty
+- timestamp
+
+---
+
+### 'Orderbook'
+
+Owns the full book.
+
