@@ -69,3 +69,35 @@ Fields:
 
 Owns the full book.
 
+- bid price levels
+- ask price levels
+- order id lookup
+
+## Data Structures
+
+### Price Levels
+
+```cpp
+std::map<Price, Limit>
+```
+
+Used for bids and asks.
+
+### FIFO Orders
+
+```cpp
+std::unordered_map<OrderId, Location>
+```
+
+Maps an order id to where that order lives in the book. 
+
+### OrderLocation
+
+fields:
+
+- side
+- price 
+- order_it (iterator to the order in the list)
+
+This allows fast cancels without scanning the book.
+
