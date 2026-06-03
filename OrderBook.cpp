@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <iterator>
+#include <stdexcept>
 
 void OrderBook::add_order(const Order & order)
 {
@@ -176,7 +177,7 @@ std::vector<Trade> OrderBook::process_order(const Order & order) {
             Trade record = {incoming.id, resting_order->id, resting_order->price, trade_qty, incoming.timestamp};
 
             incoming.qty            -= trade_qty;
-            resting_order->qty   -= trade_qty;
+            resting_order->qty      -= trade_qty;
             level.total_volume      -= trade_qty;
 
             if (resting_order->qty == 0) {
@@ -203,7 +204,7 @@ std::vector<Trade> OrderBook::process_order(const Order & order) {
             Trade record = {resting_order->id, incoming.id, resting_order->price, trade_qty, incoming.timestamp};
 
             incoming.qty            -= trade_qty;
-            resting_order->qty   -= trade_qty;
+            resting_order->qty      -= trade_qty;
             level.total_volume      -= trade_qty;
 
             if (resting_order->qty == 0) {
@@ -218,11 +219,45 @@ std::vector<Trade> OrderBook::process_order(const Order & order) {
 
             trades.push_back(record);
         } else {
-            // throw exception
+            throw std::logic_error("Error: Side must be either 'Sell' or 'Buy'!");
         }
     }
 
     if (incoming.qty > 0) add_order(incoming);
 
     return trades;
+}
+
+bool OrderBook::check_invariants() const {
+    for (auto limit_it { bids.begin() }; limit_it != bids.end(); ++limit_it) {
+        const Limit &level = limit_it->second;
+
+        if (limit_it->first != level.price) return false;
+        if (level.resting_orders.empty()) return false;
+        if (level.resting_orders.size() != level.num_orders) return false;
+
+        Qty actual_volume {};
+        for (auto order_it { level.resting_orders.begin() }; order_it != level.resting_orders.end(); ++order_it) {
+            actual_volume += order_it->qty;
+        }
+
+        if (actual_volume != level.total_volume) return false;
+    }
+
+    for (auto limit_it { asks.begin() }; limit_it != asks.end(); ++limit_it) {
+        const Limit &level = limit_it->second;
+
+        if (limit_it->first != level.price) return false; 
+        if (level.resting_orders.empty()) return false;
+        if (level.resting_orders.size() != level.num_orders) return false;
+
+        Qty actual_volume {};
+        for (auto order_it { level.resting_orders.begin() }; order_it != level.resting_orders.end(); ++order_it) {
+            actual_volume += order_it->qty;
+        }
+
+        if (actual_volume != level.total_volume) return false;
+    }
+
+    return true; 
 }

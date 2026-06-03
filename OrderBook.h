@@ -32,6 +32,7 @@ class OrderBook
         std::optional<Price> best_ask();
         
         bool would_match(const Order & order);
+        bool check_invariants() const;
 
         std::vector<Trade> process_order(const Order & order);
 };
