@@ -11,4 +11,9 @@ enum Side {
     SELL
 };
 
+enum Type {
+    LIMIT,
+    MARKET
+};
+
 #endif

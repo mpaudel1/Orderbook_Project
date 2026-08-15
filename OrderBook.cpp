@@ -122,7 +122,7 @@ void OrderBook::print_book() {
     std::cout << "\n";
 }
 
-std::optional<Price> OrderBook::best_bid() {
+std::optional<Price> OrderBook::best_bid() const {
     if (bids.empty()) {
         return {};
     } else {
@@ -131,7 +131,7 @@ std::optional<Price> OrderBook::best_bid() {
     }
 }
 
-std::optional<Price> OrderBook::best_ask() {
+std::optional<Price> OrderBook::best_ask() const {
     if (asks.empty()) {
         return {};
     } else {
@@ -140,7 +140,7 @@ std::optional<Price> OrderBook::best_ask() {
     }
 }
 
-bool OrderBook::would_match(const Order & order) {
+bool OrderBook::would_match(const Order & order) const {
     if (order.side == Side::BUY) {
         auto best_ask_r = best_ask();
         if (!best_ask_r) return false;
@@ -155,7 +155,19 @@ bool OrderBook::would_match(const Order & order) {
     } 
 
     return false;
-} 
+}
+
+bool OrderBook::can_match(const Order & order) const {
+    if (order.type == Type::LIMIT) {
+        return would_match(order);
+    } if (order.side == Side::BUY) {
+        return !asks.empty();
+    } else if (order.side == Side::SELL) {
+        return !bids.empty();
+    }
+
+    return false;
+}
 
 std::vector<Trade> OrderBook::process_order(const Order & order) {
     Order incoming = order;
@@ -164,68 +176,82 @@ std::vector<Trade> OrderBook::process_order(const Order & order) {
     auto found = orderid_lookup.find(order.id);
     if (found != orderid_lookup.end()) return trades;
 
-    while (incoming.qty > 0  && would_match(incoming)) {
+    while (incoming.qty > 0  && can_match(incoming)) {
         if (incoming.side == BUY) {
-            auto best_ask_r = best_ask();
 
-            auto ask_it = asks.find(*best_ask_r);
-            Limit &level = ask_it->second;
-
-            auto resting_order = level.resting_orders.begin();
-            Qty trade_qty = (incoming.qty < resting_order->qty) ? incoming.qty : resting_order->qty;
-
-            Trade record = {incoming.id, resting_order->id, resting_order->price, trade_qty, incoming.timestamp};
-
-            incoming.qty            -= trade_qty;
-            resting_order->qty      -= trade_qty;
-            level.total_volume      -= trade_qty;
-
-            if (resting_order->qty == 0) {
-                orderid_lookup.erase(resting_order->id);
-                level.resting_orders.erase(resting_order);
-                --level.num_orders;
-            }
-
-            if (level.resting_orders.empty()) {
-                asks.erase(ask_it);
-            }
-
-            trades.push_back(record);
+            match_buy_once(incoming, trades);
 
         } else if (incoming.side == SELL) {
-            auto best_bid_r = best_bid();
 
-            auto bid_it = bids.find(*best_bid_r);
-            Limit &level = bid_it->second;
+            match_sell_once(incoming, trades);
 
-            auto resting_order = level.resting_orders.begin();
-            Qty trade_qty = (incoming.qty < resting_order->qty) ? incoming.qty : resting_order->qty;
-
-            Trade record = {resting_order->id, incoming.id, resting_order->price, trade_qty, incoming.timestamp};
-
-            incoming.qty            -= trade_qty;
-            resting_order->qty      -= trade_qty;
-            level.total_volume      -= trade_qty;
-
-            if (resting_order->qty == 0) {
-                orderid_lookup.erase(resting_order->id);
-                level.resting_orders.erase(resting_order);
-                --level.num_orders;
-            }
-
-            if (level.resting_orders.empty()) {
-                bids.erase(bid_it);
-            }
-
-            trades.push_back(record);
         } else {
             throw std::logic_error("Error: Side must be either 'Sell' or 'Buy'!");
         }
     }
 
-    if (incoming.qty > 0) add_order(incoming);
+    if (incoming.qty > 0 && incoming.type == Type::LIMIT) add_order(incoming);
 
     return trades;
+}
+
+void OrderBook::match_buy_once(Order & incoming, std::vector<Trade> & trades) {
+    auto best_ask_r = best_ask();
+
+    auto ask_it = asks.find(*best_ask_r);
+    Limit &level = ask_it->second;
+
+    auto resting_order = level.resting_orders.begin();
+    Qty trade_qty = (incoming.qty < resting_order->qty) ? incoming.qty : resting_order->qty;
+
+    Trade record = {incoming.id, resting_order->id, resting_order->price, trade_qty, incoming.timestamp};
+
+    incoming.qty            -= trade_qty;
+    resting_order->qty      -= trade_qty;
+    level.total_volume      -= trade_qty;
+
+
+    if (resting_order->qty == 0) {
+
+        orderid_lookup.erase(resting_order->id);
+        level.resting_orders.erase(resting_order);
+        --level.num_orders;
+
+    }
+
+    if (level.resting_orders.empty()) {
+        asks.erase(ask_it);
+    }
+
+    trades.push_back(record);   
+}
+
+void OrderBook::match_sell_once(Order & incoming, std::vector<Trade> & trades) {
+    auto best_bid_r = best_bid();
+
+    auto bid_it = bids.find(*best_bid_r);
+    Limit &level = bid_it->second;
+
+    auto resting_order = level.resting_orders.begin();
+    Qty trade_qty = (incoming.qty < resting_order->qty) ? incoming.qty : resting_order->qty;
+
+    Trade record = {resting_order->id, incoming.id, resting_order->price, trade_qty, incoming.timestamp};
+
+    incoming.qty            -= trade_qty;
+    resting_order->qty      -= trade_qty;
+    level.total_volume      -= trade_qty;
+
+    if (resting_order->qty == 0) {
+        orderid_lookup.erase(resting_order->id);
+        level.resting_orders.erase(resting_order);
+        --level.num_orders;
+    }
+
+    if (level.resting_orders.empty()) {
+        bids.erase(bid_it);
+    }
+
+    trades.push_back(record);
 }
 
 bool OrderBook::check_invariants() const {

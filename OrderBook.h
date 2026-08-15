@@ -21,6 +21,11 @@ class OrderBook
         std::map<Price, Limit>                      bids;
         std::map<Price, Limit>                      asks;
         std::unordered_map<OrderId, OrderLocation>  orderid_lookup;
+
+        void match_buy_once(Order & incoming, std::vector<Trade> & trades);
+        void match_sell_once(Order & incoming, std::vector<Trade> & trades);
+
+        bool can_match(const Order & order) const;
     
     public:
         void add_order(const Order & order);
@@ -28,10 +33,10 @@ class OrderBook
 
         void print_book();
 
-        std::optional<Price> best_bid();
-        std::optional<Price> best_ask();
+        std::optional<Price> best_bid() const;
+        std::optional<Price> best_ask() const;
         
-        bool would_match(const Order & order);
+        bool would_match(const Order & order) const;
         bool check_invariants() const;
 
         std::vector<Trade> process_order(const Order & order);

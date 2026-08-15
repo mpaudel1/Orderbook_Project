@@ -7,6 +7,7 @@ struct Order
 {
     OrderId     id;
     Side        side;
+    Type        type;
     Price       price;
     Qty         qty;
     Timestamp   timestamp;
