@@ -1,5 +1,6 @@
 #include "OrderBook.h"
 #include "EventParser.h"
+#include "TradeLogger.h"
 
 #include <fstream>
 #include <iostream>
@@ -21,7 +22,9 @@ void print_trades(const std::vector<Trade>& trades) {
 }
 
 int main() {
-    OrderBook book {}; EventParser parser {};
+    OrderBook book {}; 
+    EventParser parser {}; 
+    TradeLogger logger {"trades.csv"};
 
     std::ifstream inFile("events.txt");
 
@@ -38,6 +41,7 @@ int main() {
         if (event.event_type == EventType::NEW_ORDER) {
             std::vector<Trade> trades = book.process_order(event.order);
             print_trades(trades);
+            logger.log_trades(trades);
         } else if (event.event_type == EventType::CANCEL) {
             book.cancel_order(event.cancel_order_id);
         } else {

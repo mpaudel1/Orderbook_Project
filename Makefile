@@ -4,10 +4,10 @@ CXXFLAGS = -std=c++17 -Wall
 TARGET = orderbook
 TEST = orderbook_test
 
-SRCS = main.cpp OrderBook.cpp EventParser.cpp
+SRCS = main.cpp OrderBook.cpp EventParser.cpp TradeLogger.cpp
 OBJS = $(SRCS:.cpp=.o)
 
-TEST_SRCS = main_tests.cpp OrderBook.cpp EventParser.cpp
+TEST_SRCS = main_tests.cpp OrderBook.cpp EventParser.cpp TradeLogger.cpp
 TEST_OBJS = $(TEST_SRCS:.cpp=.o)
 
 $(TARGET): $(OBJS)
@@ -24,6 +24,9 @@ OrderBook.o: OrderBook.cpp OrderBook.h Limit.h Order.h Types.h
 
 EventParser.o: EventParser.cpp EventParser.h Event.h Order.h Types.h
 	$(CXX) $(CXXFLAGS) -c EventParser.cpp
+
+TradeLogger.o: TradeLogger.cpp TradeLogger.h Trade.h
+	$(CXX) $(CXXFLAGS) -c TradeLogger.cpp
 
 run: $(TARGET)
 	./$(TARGET)

@@ -1,3 +1,5 @@
 *.o
 orderbook
+orderbook_test
 a.out
+trades.csv
