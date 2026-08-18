@@ -3,7 +3,7 @@ CXXFLAGS = -std=c++17 -Wall
 
 TARGET = orderbook
 
-SRCS = main.cpp OrderBook.cpp
+SRCS = main.cpp OrderBook.cpp EventParser.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 $(TARGET): $(OBJS)
@@ -14,6 +14,9 @@ main.o: main.cpp OrderBook.h Limit.h Order.h Types.h
 
 OrderBook.o: OrderBook.cpp OrderBook.h Limit.h Order.h Types.h
 	$(CXX) $(CXXFLAGS) -c OrderBook.cpp
+
+EventParser.o: EventParser.cpp EventParser.h Event.h Order.h Types.h
+	$(CXX) $(CXXFLAGS) -c EventParser.cpp
 
 run: $(TARGET)
 	./$(TARGET)
