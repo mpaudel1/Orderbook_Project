@@ -1,5 +1,7 @@
 *.o
 orderbook
 orderbook_test
+benchmark
 a.out
 trades.csv
+
