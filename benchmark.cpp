@@ -6,7 +6,7 @@
 void run_add_only_benchmark() {
     OrderBook book {};
 
-    constexpr int resting_orders = 100'000;
+    constexpr int resting_orders = 1'000'000;
     constexpr int total_events = resting_orders;
 
     auto start = std::chrono::steady_clock::now();
@@ -48,8 +48,8 @@ void run_add_only_benchmark() {
 void run_market_match_benchmark() {
     OrderBook book {};
 
-    constexpr int resting_orders = 50'000;
-    constexpr int market_orders = 50'000;
+    constexpr int resting_orders = 500'000;
+    constexpr int market_orders = 500'000;
     constexpr int total_events = resting_orders + market_orders;
 
     auto start = std::chrono::steady_clock::now();
@@ -106,7 +106,7 @@ void run_market_match_benchmark() {
 void run_cancel_benchmark() {
     OrderBook book {};
 
-    constexpr int resting_orders = 100'000;
+    constexpr int resting_orders = 1'000'000;
     constexpr int total_events = resting_orders;
 
     for (int i { 0 }; i < resting_orders; ++i) {

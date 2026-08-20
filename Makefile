@@ -1,6 +1,8 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall 
 
+BENCHFLAGS = -std=c++17 -O3 -DNDEBUG -Wall -Wextra -pedantic
+
 TARGET = orderbook
 TEST = orderbook_test
 BENCH = benchmark
@@ -20,8 +22,8 @@ $(TARGET): $(OBJS)
 $(TEST): $(TEST_OBJS)
 	$(CXX) $(CXXFLAGS) $(TEST_OBJS) -o $(TEST)
 
-$(BENCH): $(BENCH_OBJS)
-	$(CXX) $(CXXFLAGS) $(BENCH_OBJS) -o $(BENCH)
+$(BENCH): benchmark.cpp OrderBook.cpp OrderBook.h Limit.h Order.h Trade.h Types.h
+	$(CXX) $(BENCHFLAGS) benchmark.cpp OrderBook.cpp -o $(BENCH)
 
 main.o: main.cpp OrderBook.h Limit.h Order.h Types.h
 	$(CXX) $(CXXFLAGS) -c main.cpp
