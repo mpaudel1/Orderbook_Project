@@ -3,6 +3,7 @@ CXXFLAGS = -std=c++17 -Wall
 
 TARGET = orderbook
 TEST = orderbook_test
+BENCH = benchmark
 
 SRCS = main.cpp OrderBook.cpp EventParser.cpp TradeLogger.cpp
 OBJS = $(SRCS:.cpp=.o)
@@ -10,11 +11,17 @@ OBJS = $(SRCS:.cpp=.o)
 TEST_SRCS = main_tests.cpp OrderBook.cpp EventParser.cpp TradeLogger.cpp
 TEST_OBJS = $(TEST_SRCS:.cpp=.o)
 
+BENCH_SRCS = benchmark.cpp OrderBook.cpp
+BENCH_OBJS = $(BENCH_SRCS:.cpp=.o)
+
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) -o $(TARGET)
 
 $(TEST): $(TEST_OBJS)
 	$(CXX) $(CXXFLAGS) $(TEST_OBJS) -o $(TEST)
+
+$(BENCH): $(BENCH_OBJS)
+	$(CXX) $(CXXFLAGS) $(BENCH_OBJS) -o $(BENCH)
 
 main.o: main.cpp OrderBook.h Limit.h Order.h Types.h
 	$(CXX) $(CXXFLAGS) -c main.cpp
@@ -34,5 +41,8 @@ run: $(TARGET)
 test: $(TEST)
 	./$(TEST)
 
+bench: $(BENCH)
+	./$(BENCH)
+
 clean:
-	rm -f *.o $(TARGET) $(TEST)
+	rm -f *.o $(TARGET) $(TEST) $(BENCH)
